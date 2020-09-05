@@ -1,9 +1,12 @@
+import 'package:chat_app/src/helpers/show_alert.dart';
+import 'package:chat_app/src/providers/auth.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
 import 'package:chat_app/src/widgets/labels.dart';
 import 'package:chat_app/src/widgets/logo.dart';
 import 'package:chat_app/src/widgets/terms_and_conditions.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginView extends StatelessWidget {
 
@@ -50,6 +53,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -70,17 +74,31 @@ class __FormState extends State<_Form> {
           ),
 
          CustomButton(
+           
            name: 'Ingresar',
-           callBack: (){
-             print(emailCtrl.text);
-             print(passCtrl.text);
-           },
+           callBack: !authService.authenticating ? (){ _login(); } : null,
          )
 
         ],
       ),
     );
   }
+
+
+   _login() async {
+    final authService = Provider.of<AuthService>(context,listen: false);
+
+    FocusScope.of(context).unfocus();
+    final loginOk = await  authService.login(email: emailCtrl.text, password: passCtrl.text);
+    if(loginOk == true){
+      Navigator.pushReplacementNamed(context, 'users');
+    }
+    else
+    {
+      showAlert(context, 'Login incorrecto', 'Revise sus credenciales');
+    }
+  }
+
 }
 
 

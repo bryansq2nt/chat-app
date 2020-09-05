@@ -1,5 +1,7 @@
 import 'package:chat_app/src/models/user.dart';
+import 'package:chat_app/src/providers/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class UsersView extends StatefulWidget {
@@ -24,32 +26,27 @@ class _UsersViewState extends State<UsersView> {
 
   ];
 
-  List<String> items = ["1", "2", "3", "4", "5", "6", "7", "8"];
   RefreshController _refreshController =
   RefreshController(initialRefresh: false);
 
 
-  void _onLoading() async{
-    // monitor network fetch
-    await Future.delayed(Duration(milliseconds: 1000));
-    // if failed,use loadFailed(),if no data return,use LoadNodata()
-    items.add((items.length+1).toString());
-    if(mounted)
-      setState(() {
 
-      });
-    _refreshController.loadComplete();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('mi nombre', style: TextStyle(color: Colors.black87),),
+        title: Text(authService.user.name, style: TextStyle(color: Colors.black87),),
         elevation: 1,
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.exit_to_app, color: Colors.black87,),
+          onPressed: (){
+            Navigator.pushReplacementNamed(context, 'login');
+            AuthService.deleteToken();
+
+          },
         ),
         actions: <Widget>[
           Container(
