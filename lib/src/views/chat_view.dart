@@ -1,8 +1,13 @@
 import 'dart:io';
 
+import 'package:chat_app/src/models/messages_response.dart';
+import 'package:chat_app/src/providers/auth_service.dart';
+import 'package:chat_app/src/services/chat_service.dart';
+import 'package:chat_app/src/services/socket_service.dart';
 import 'package:chat_app/src/widgets/chat_message.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChatView extends StatefulWidget {
   @override
@@ -14,10 +19,59 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
   final _focusNode = new FocusNode();
   bool _isWriting = false;
 
+  ChatService _chatService;
+  SocketService _socketService;
+  AuthService _authService;
+
   List<ChatMessage> _messages = [];
 
   @override
+  void initState() {
+    this._chatService = Provider.of<ChatService>(context,listen: false);
+    this._socketService = Provider.of<SocketService>(context,listen: false);
+    this._authService = Provider.of<AuthService>(context,listen: false);
+
+    this._socketService.socket.on('private-message',_getNewMessages);
+
+    _loadHistory(this._chatService.userTo.uid);
+
+
+    super.initState();
+  }
+
+  void _loadHistory(String userId) async {
+    List<Message> chat = await this._chatService.getChat(userId: userId);
+    final history = chat.map((m) => new ChatMessage(
+      text: m.message,
+      uid: m.from,
+      animationController: new AnimationController(vsync: this, duration: Duration(microseconds: 0))..forward(),
+    ));
+
+    setState(() {
+      _messages.insertAll(0, history);
+    });
+  }
+
+  void _getNewMessages(dynamic data){
+    ChatMessage newMessage = new ChatMessage(
+        text: data['message'],
+        uid: data['from'],
+        animationController: new AnimationController(vsync: this, duration: Duration(milliseconds: 500 ))
+    );
+    setState(() {
+      this._messages.insert(0, newMessage);
+    });
+    newMessage.animationController.forward();
+
+
+  }
+
+
+  @override
   Widget build(BuildContext context) {
+    final chatService = Provider.of<ChatService>(context);
+    final userTo = chatService.userTo;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -26,8 +80,7 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
         title: Column(
           children: <Widget>[
             CircleAvatar(
-              child: Text(
-                "TE",
+              child: Text(userTo.name.substring(0,2),
                 style: TextStyle(fontSize: 12),
               ),
               backgroundColor: Colors.blue[100],
@@ -36,8 +89,7 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
             SizedBox(
               height: 3,
             ),
-            Text(
-              'Test user',
+            Text(userTo.name,
               style: TextStyle(color: Colors.black87, fontSize: 12),
             )
           ],
@@ -54,7 +106,8 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
                   itemBuilder: (context, i) => this._messages[i]),
             ),
             Divider(
-              height: 1,
+              height: 15,
+               color: Colors.transparent,
             ),
             Container(
               color: Colors.white,
@@ -71,6 +124,7 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
       child: Container(
         margin: EdgeInsets.symmetric(
           horizontal: 8.0,
+
         ),
         child: Row(
           children: <Widget>[
@@ -132,7 +186,7 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
 
 
     final newMessage = new ChatMessage(
-      uid: '123',
+      uid: this._authService.user.uid,
       text: message,
       animationController: AnimationController(vsync: this, duration: Duration(milliseconds: 500 )),
     );
@@ -146,12 +200,18 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
     setState(() {
       _isWriting = false;
     });
+    
+    this._socketService.socket.emit('private-message',{
+      'from': this._authService.user.uid,
+      'to': this._chatService.userTo.uid,
+      'message': message
+    });
 
   }
 
   @override
   void dispose() {
-    //TODO off socket,
+    this._socketService.socket.off('private-message');
     for( ChatMessage message in this._messages){
       message.animationController.dispose();
     }

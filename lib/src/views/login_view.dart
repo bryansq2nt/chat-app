@@ -1,5 +1,6 @@
 import 'package:chat_app/src/helpers/show_alert.dart';
-import 'package:chat_app/src/providers/auth.dart';
+import 'package:chat_app/src/providers/auth_service.dart';
+import 'package:chat_app/src/services/socket_service.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
 import 'package:chat_app/src/widgets/labels.dart';
@@ -54,6 +55,7 @@ class __FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -87,10 +89,12 @@ class __FormState extends State<_Form> {
 
    _login() async {
     final authService = Provider.of<AuthService>(context,listen: false);
+    final socketService = Provider.of<SocketService>(context,listen: false);
 
     FocusScope.of(context).unfocus();
     final loginOk = await  authService.login(email: emailCtrl.text, password: passCtrl.text);
     if(loginOk == true){
+      socketService.connect();
       Navigator.pushReplacementNamed(context, 'users');
     }
     else
