@@ -1,5 +1,5 @@
 import 'package:chat_app/src/helpers/show_alert.dart';
-import 'package:chat_app/src/providers/auth_service.dart';
+import 'package:chat_app/src/services/auth_service.dart';
 import 'package:chat_app/src/services/socket_service.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
@@ -99,7 +99,7 @@ class __FormState extends State<_Form> {
     final registerOk = await  authService.register(name:nameCtrl.text,email: emailCtrl.text, password: passCtrl.text);
     if(registerOk == true){
       socketService.connect();
-      Navigator.pushReplacementNamed(context, 'users');
+      Navigator.pushReplacementNamed(context, 'contacts');
     }
     else
     {

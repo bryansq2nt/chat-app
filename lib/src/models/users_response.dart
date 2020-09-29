@@ -1,7 +1,4 @@
-
 import 'dart:convert';
-
-import 'package:chat_app/src/models/user.dart';
 
 UsersResponse usersResponseFromJson(String str) => UsersResponse.fromJson(json.decode(str));
 
@@ -23,3 +20,34 @@ class UsersResponse {
   };
 }
 
+class User {
+  User({
+    this.online,
+    this.name,
+    this.email,
+    this.uid,
+    this.unReadedMessages,
+  });
+
+  bool online;
+  String name;
+  String email;
+  String uid;
+  int unReadedMessages;
+
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    online: json["online"],
+    name: json["name"],
+    email: json["email"],
+    uid: json["user_id"],
+    unReadedMessages: json["un_readed_messages"] == null ? null : json["un_readed_messages"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "online": online,
+    "name": name,
+    "email": email,
+    "uid": uid,
+    "un_readed_messages": unReadedMessages == null ? null : unReadedMessages,
+  };
+}

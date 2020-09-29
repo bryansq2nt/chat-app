@@ -1,5 +1,5 @@
 import 'package:chat_app/src/helpers/show_alert.dart';
-import 'package:chat_app/src/providers/auth_service.dart';
+import 'package:chat_app/src/services/auth_service.dart';
 import 'package:chat_app/src/services/socket_service.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
@@ -22,7 +22,7 @@ class LoginView extends StatelessWidget {
         child: SingleChildScrollView(
           physics: BouncingScrollPhysics(),
           child: Container(
-            //height: MediaQuery.of(context).size.height * 0.96,
+            height: MediaQuery.of(context).size.height * 0.96,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -95,7 +95,7 @@ class __FormState extends State<_Form> {
     final loginOk = await  authService.login(email: emailCtrl.text, password: passCtrl.text);
     if(loginOk == true){
       socketService.connect();
-      Navigator.pushReplacementNamed(context, 'users');
+      Navigator.pushReplacementNamed(context, 'contacts');
     }
     else
     {

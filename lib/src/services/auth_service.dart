@@ -1,10 +1,9 @@
 
 
 import 'dart:convert';
-
 import 'package:chat_app/src/globals/environment.dart';
 import 'package:chat_app/src/models/login_response.dart';
-import 'package:chat_app/src/models/user.dart';
+import 'package:chat_app/src/models/users_response.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';

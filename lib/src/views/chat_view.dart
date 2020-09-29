@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:chat_app/src/models/messages_response.dart';
-import 'package:chat_app/src/providers/auth_service.dart';
+import 'package:chat_app/src/services/auth_service.dart';
 import 'package:chat_app/src/services/chat_service.dart';
 import 'package:chat_app/src/services/socket_service.dart';
 import 'package:chat_app/src/widgets/chat_message.dart';
@@ -10,11 +10,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ChatView extends StatefulWidget {
+
   @override
   _ChatViewState createState() => _ChatViewState();
 }
 
 class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
+  final _chatController = new ScrollController();
+
   final _inputController = new TextEditingController();
   final _focusNode = new FocusNode();
   bool _isWriting = false;
@@ -30,32 +33,44 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
     this._chatService = Provider.of<ChatService>(context,listen: false);
     this._socketService = Provider.of<SocketService>(context,listen: false);
     this._authService = Provider.of<AuthService>(context,listen: false);
-
     this._socketService.socket.on('private-message',_getNewMessages);
+    this._socketService.socket.emit('read-all-messages',{ "from_id":  _chatService.chat.to.uid, "to_id":  _chatService.chat.from.uid});
 
-    _loadHistory(this._chatService.userTo.uid);
+    _loadHistory();
 
 
     super.initState();
   }
 
-  void _loadHistory(String userId) async {
-    List<Message> chat = await this._chatService.getChat(userId: userId);
-    final history = chat.map((m) => new ChatMessage(
-      text: m.message,
-      uid: m.from,
-      animationController: new AnimationController(vsync: this, duration: Duration(microseconds: 0))..forward(),
-    ));
+  void _loadHistory() async {
+    if(this._chatService.chat != null){
+      List<Message> chat = await this._chatService.getChat(fromId: this._chatService.chat.from.uid, toId: this._chatService.chat.to.uid);
+      final history = chat.map((m) => new ChatMessage(
+        text: m.message,
+        uid: m.from,
+        readed: m.readed,
+        date: m.createdAt,
+        animationController: new AnimationController(vsync: this, duration: Duration(microseconds: 0))..forward(),
+      ));
 
-    setState(() {
-      _messages.insertAll(0, history);
-    });
+      setState(() {
+        this._messages.insertAll(0, history);
+      });
+    }
+    else
+      {
+        print("New chat");
+      }
+
   }
 
   void _getNewMessages(dynamic data){
+    print(data);
     ChatMessage newMessage = new ChatMessage(
         text: data['message'],
-        uid: data['from'],
+        uid: data['from_id'],
+        readed: true,
+        date: DateTime.now(),
         animationController: new AnimationController(vsync: this, duration: Duration(milliseconds: 500 ))
     );
     setState(() {
@@ -66,11 +81,34 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
 
   }
 
+  void _loadMoreMessages() async {
+    List<Message> chat = await this._chatService.getMoreMessages(fromId: this._authService.user.uid,toId: this._chatService.userTo.uid,limit: 10,offset: this._messages.length);
+    final history = chat.map((m) => new ChatMessage(
+      text: m.message,
+      uid: m.from,
+      readed: m.readed,
+      date: m.createdAt,
+      animationController: new AnimationController(vsync: this, duration: Duration(microseconds: 0))..forward(),
+    ));
+
+    setState(() {
+      _messages.addAll( history);
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
     final chatService = Provider.of<ChatService>(context);
     final userTo = chatService.userTo;
+
+    if(!this._chatController.hasListeners){
+      this._chatController.addListener(() {
+        if(this._chatController.position.pixels == this._chatController.position.maxScrollExtent){
+          _loadMoreMessages();
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -100,6 +138,7 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
           children: <Widget>[
             Flexible(
               child: ListView.builder(
+                controller: this._chatController,
                   physics: BouncingScrollPhysics(),
                   reverse: true,
                   itemCount: this._messages.length,
@@ -186,8 +225,11 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
 
 
     final newMessage = new ChatMessage(
-      uid: this._authService.user.uid,
+
+      uid: _chatService.chat.from.uid,
       text: message,
+      readed: false,
+      date: DateTime.now(),
       animationController: AnimationController(vsync: this, duration: Duration(milliseconds: 500 )),
     );
 
@@ -202,8 +244,9 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
     });
     
     this._socketService.socket.emit('private-message',{
-      'from': this._authService.user.uid,
-      'to': this._chatService.userTo.uid,
+      'chat_room_id': this._chatService.chat.id,
+      'from_id': this._chatService.chat.from.uid,
+      'to_id': this._chatService.chat.to.uid,
       'message': message
     });
 
@@ -212,6 +255,7 @@ class _ChatViewState extends State<ChatView>  with TickerProviderStateMixin{
   @override
   void dispose() {
     this._socketService.socket.off('private-message');
+
     for( ChatMessage message in this._messages){
       message.animationController.dispose();
     }

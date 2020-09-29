@@ -1,4 +1,4 @@
-import 'package:chat_app/src/providers/auth_service.dart';
+import 'package:chat_app/src/services/auth_service.dart';
 import 'package:chat_app/src/services/chat_service.dart';
 import 'package:chat_app/src/services/socket_service.dart';
 
