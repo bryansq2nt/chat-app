@@ -1,5 +1,5 @@
 import 'package:chat_app/src/globals/environment.dart';
-import 'file:///D:/Proyectos/MurgasMedia/Flutter/chat_app/lib/src/services/auth_service.dart';
+import 'package:chat_app/src/providers/auth_service.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/material.dart';
 

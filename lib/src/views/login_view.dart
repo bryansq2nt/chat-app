@@ -1,13 +1,9 @@
-import 'package:chat_app/src/helpers/show_alert.dart';
-import 'package:chat_app/src/services/auth_service.dart';
-import 'package:chat_app/src/services/socket_service.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
 import 'package:chat_app/src/widgets/labels.dart';
 import 'package:chat_app/src/widgets/logo.dart';
 import 'package:chat_app/src/widgets/terms_and_conditions.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class LoginView extends StatelessWidget {
 
@@ -22,7 +18,7 @@ class LoginView extends StatelessWidget {
         child: SingleChildScrollView(
           physics: BouncingScrollPhysics(),
           child: Container(
-            height: MediaQuery.of(context).size.height * 0.96,
+            //height: MediaQuery.of(context).size.height * 0.96,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -54,8 +50,6 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
-
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -76,33 +70,17 @@ class __FormState extends State<_Form> {
           ),
 
          CustomButton(
-           
            name: 'Ingresar',
-           callBack: !authService.authenticating ? (){ _login(); } : null,
+           callBack: (){
+             print(emailCtrl.text);
+             print(passCtrl.text);
+           },
          )
 
         ],
       ),
     );
   }
-
-
-   _login() async {
-    final authService = Provider.of<AuthService>(context,listen: false);
-    final socketService = Provider.of<SocketService>(context,listen: false);
-
-    FocusScope.of(context).unfocus();
-    final loginOk = await  authService.login(email: emailCtrl.text, password: passCtrl.text);
-    if(loginOk == true){
-      socketService.connect();
-      Navigator.pushReplacementNamed(context, 'contacts');
-    }
-    else
-    {
-      showAlert(context, 'Login incorrecto', 'Revise sus credenciales');
-    }
-  }
-
 }
 
 

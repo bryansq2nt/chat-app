@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 MessagesResponse messagesResponseFromJson(String str) => MessagesResponse.fromJson(json.decode(str));
 
 String messagesResponseToJson(MessagesResponse data) => json.encode(data.toJson());
@@ -23,40 +22,32 @@ class MessagesResponse {
 
 class Message {
   Message({
-    this.readed,
     this.from,
     this.to,
     this.message,
-    this.chat,
     this.createdAt,
     this.updatedAt,
   });
 
-  bool readed;
   String from;
   String to;
   String message;
-  String chat;
   DateTime createdAt;
   DateTime updatedAt;
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
-    readed: json["readed"],
-    from: json["from_id"],
-    to: json["to_id"],
+    from: json["from"],
+    to: json["to"],
     message: json["message"],
-    chat: json["chat_room_id"],
-    createdAt: DateTime.parse(json["created_at"])
+    createdAt: DateTime.parse(json["createdAt"]),
+    updatedAt: DateTime.parse(json["updatedAt"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "readed": readed,
-    "from_id": from,
-    "to_id": to,
+    "from": from,
+    "to": to,
     "message": message,
-    "chat_room_id": chat,
-    "created_at": createdAt.toIso8601String()
+    "createdAt": createdAt.toIso8601String(),
+    "updatedAt": updatedAt.toIso8601String(),
   };
 }
-
-
